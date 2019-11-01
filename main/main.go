@@ -70,7 +70,7 @@ func getDistanceTimeStamp(People data_struct.People, DisTimeChan chan data_struc
 }
 
 func main() {
-	var ProducerConfig *producersetting.ProducerConfig
+	var ProducerConfig producersetting.ProducerConfig
 	ProducerConfig.Topic = "testTopic"
 	ProducerConfig.Brokers[0] = "localhost:9092"
 	People := getPeople(filepath)
