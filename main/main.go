@@ -10,7 +10,7 @@ import (
 	"pedestrain_distance/producersetting"
 )
 
-const filepath = "video-process-OBJECT_FACE_PEDESTRIAN_ESTATE-1572343893823932889/pach_120s.mp4/output.json"
+const filepath = "../video-process-OBJECT_FACE_PEDESTRIAN_ESTATE-1572343893823932889/pach_120s.mp4/output.json"
 
 func getPeople(file string) data_struct.People {
 	f, err := os.Open(filepath)
