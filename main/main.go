@@ -4,59 +4,23 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"gitlab.sz.sensetime.com/rd-platform/public/strategy-service/utils/kafka"
 	"math"
 	"os"
+	"pedestrain_distance/data_struct"
 	"pedestrain_distance/producersetting"
 )
 
 const filepath = "video-process-OBJECT_FACE_PEDESTRIAN_ESTATE-1572343893823932889/pach_120s.mp4/output.json"
 
-type Person struct {
-	Objects *Objects `json:"object"`
-	Time    string   `json:"relative_time"`
-}
-
-type Objects struct {
-	Pedestrian *Pedestrian `json:"pedestrian"`
-}
-
-type Pedestrian struct {
-	Rectangle *Rectangle `json:"rectangle"`
-	ID        string     `json:"track_id"`
-}
-
-type Rectangle struct {
-	Vertices []Vertice `json:"vertices"`
-}
-
-type Vertice struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
-
-type PairDistance struct {
-	First_ID  string
-	Second_ID string
-	Distance  float64
-}
-
-type DistanceTimeStamp struct {
-	Time          string
-	PairDistances []PairDistance
-}
-
-type People map[string][]Person
-
-func getPeople(file string) People {
+func getPeople(file string) data_struct.People {
 	f, err := os.Open(filepath)
 	if err != nil {
 		fmt.Println(err)
 	}
 	s := bufio.NewScanner(f)
-	People := make(map[string][]Person)
+	People := make(map[string][]data_struct.Person)
 	for s.Scan() {
-		var Person Person
+		var Person data_struct.Person
 		if err := json.Unmarshal(s.Bytes(), &Person); err != nil {
 			fmt.Println(err)
 		}
@@ -74,7 +38,7 @@ func getPeople(file string) People {
 	return People
 }
 
-func getPairDistance(FirstPerson, SecondPerson Person) PairDistance {
+func getPairDistance(FirstPerson, SecondPerson data_struct.Person) data_struct.PairDistance {
 	firstVertices := FirstPerson.Objects.Pedestrian.Rectangle.Vertices
 	secondVertices := SecondPerson.Objects.Pedestrian.Rectangle.Vertices
 	distance := math.Pow(float64(firstVertices[0].X-secondVertices[0].X), 2)
@@ -83,16 +47,16 @@ func getPairDistance(FirstPerson, SecondPerson Person) PairDistance {
 	averageLength := math.Abs(float64(firstVertices[0].X-firstVertices[1].X)) + math.Abs(float64(secondVertices[0].X-secondVertices[1].X))
 	averageLength = averageLength / 2
 	relativeDistance := distance / averageLength
-	var PairDistance PairDistance
+	var PairDistance data_struct.PairDistance
 	PairDistance.First_ID = FirstPerson.Objects.Pedestrian.ID
 	PairDistance.Second_ID = SecondPerson.Objects.Pedestrian.ID
 	PairDistance.Distance = relativeDistance
 	return PairDistance
 }
 
-func getDistanceTimeStamp(People People, DisTimeChan chan DistanceTimeStamp) {
+func getDistanceTimeStamp(People data_struct.People, DisTimeChan chan data_struct.DistanceTimeStamp) {
 	for key, val := range People {
-		var DistanceTimeStamp DistanceTimeStamp
+		var DistanceTimeStamp data_struct.DistanceTimeStamp
 		length := len(val)
 		for i := 0; i < length; i++ {
 			for j := i + 1; j < length; j++ {
@@ -110,7 +74,7 @@ func main() {
 	ProducerConfig.Topic = "testTopic"
 	ProducerConfig.Brokers[0] = "localhost:9092"
 	People := getPeople(filepath)
-	DisTimeChan := make(chan DistanceTimeStamp)
+	DisTimeChan := make(chan data_struct.DistanceTimeStamp)
 	go getDistanceTimeStamp(People, DisTimeChan)
 	producer, err := producersetting.NewProducer(ProducerConfig)
 	if err != nil {
