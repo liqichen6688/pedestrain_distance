@@ -19,7 +19,7 @@ func NewProducer(config *ProducerConfig) (*kafka.Producer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return *producer, err
+	return producer, err
 }
 
 func ChannelToKafka(p *kafka.Producer, c chan interface{}, topic string, retry int) error {
