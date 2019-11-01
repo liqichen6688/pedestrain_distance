@@ -73,7 +73,7 @@ func main() {
 	var ProducerConfig *producersetting.ProducerConfig
 	ProducerConfig = new(producersetting.ProducerConfig)
 	ProducerConfig.Topic = "testTopic"
-	ProducerConfig.Brokers[0] = "localhost:9092"
+	ProducerConfig.Brokers = append(ProducerConfig.Brokers, "localhost:9092")
 	People := getPeople(filepath)
 	DisTimeChan := make(chan data_struct.DistanceTimeStamp)
 	go getDistanceTimeStamp(People, DisTimeChan)
